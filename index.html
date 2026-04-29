@@ -1,16 +1,13 @@
 <!DOCTYPE html>
-<!DOCTYPE html>
-
+<html lang="es">
 <!-- 
 ************************************************************
-*  PROYECTO: El Dibujo de Angela
-*  VERSIÓN: 1.0 
-*  AUTOR: José Antonio Vázquez Mingorance 
-*  DESCRIPCIÓN: Aplicación de dibujo artístico optimizada para 
-*               Tablets y PC con simetría cuádruple, trazados 
-*               orgánicos fluidos y herramientas de relleno.
-*  TECNOLOGÍAS: HTML5 Canvas, CSS3 Moderno, Vanilla JS.
-*  DESPLIEGUE: Netlify Ready.
+*  PROYECTO: El Dibujo de Angela - Mandala Edition
+*  VERSIÓN: 3.0
+*  AUTOR: Angela 
+*  DESCRIPCIÓN: App de dibujo con simetría radial dinámica 
+*               (4, 6, 8, 12, 16), relleno inteligente y 
+*               trazado de curvas ultra-suaves.
 ************************************************************
 -->
 <head>
@@ -19,8 +16,8 @@
     <title>El Dibujo de Angela</title>
     <style>
         :root {
-            --bg-color: #0a0a0a;
-            --panel-color: #161616;
+            --bg-color: #080808;
+            --panel-color: #1a1a1a;
             --accent-color: #ff79c6;
         }
 
@@ -29,7 +26,7 @@
             width: 100%; height: 100%;
             overflow: hidden;
             background-color: var(--bg-color);
-            font-family: 'Segoe UI', sans-serif;
+            font-family: 'Segoe UI', system-ui, sans-serif;
             display: flex; flex-direction: column;
             color: white;
         }
@@ -39,41 +36,52 @@
             display: flex;
             flex-wrap: wrap;
             align-items: center;
-            padding: 12px 20px;
+            padding: 10px 20px;
             gap: 15px;
             box-shadow: 0 4px 30px rgba(0,0,0,0.9);
             z-index: 10;
+            border-bottom: 1px solid #333;
         }
 
-        .brand h1 { color: var(--accent-color); font-size: 0.9rem; margin: 0; text-transform: uppercase; }
+        .brand h1 { color: var(--accent-color); font-size: 0.85rem; margin: 0; text-transform: uppercase; letter-spacing: 1px; }
 
-        .tools-group { display: flex; background: #222; padding: 5px; border-radius: 12px; gap: 5px; }
+        .tools-group { display: flex; background: #2a2a2a; padding: 4px; border-radius: 10px; gap: 4px; }
 
         .tool-btn {
-            padding: 8px 12px; border: none; background: transparent;
-            color: white; border-radius: 8px; cursor: pointer; font-size: 0.85rem; transition: 0.2s;
+            padding: 6px 10px; border: none; background: transparent;
+            color: white; border-radius: 6px; cursor: pointer; font-size: 1rem; transition: 0.2s;
         }
 
-        .tool-btn.active { background: var(--accent-color); font-weight: bold; }
+        .tool-btn.active { background: var(--accent-color); }
         
-        #undo-btn { background: #444; }
-        #undo-btn:active { transform: scale(0.95); }
+        /* Selector de Simetría */
+        .sym-selector {
+            display: flex; align-items: center; gap: 8px;
+            background: #2a2a2a; padding: 4px 12px; border-radius: 10px;
+        }
+        select {
+            background: transparent; color: white; border: 1px solid #444;
+            border-radius: 4px; padding: 2px 5px; cursor: pointer; outline: none;
+        }
 
-        .color-section { display: flex; gap: 8px; background: #222; padding: 8px 12px; border-radius: 50px; }
+        .color-section { display: flex; gap: 6px; background: #2a2a2a; padding: 6px 10px; border-radius: 50px; }
+        .color-swatch { width: 24px; height: 24px; border-radius: 50%; cursor: pointer; border: 2px solid rgba(255,255,255,0.1); }
+        .color-swatch.active { border-color: white; transform: scale(1.15); }
 
-        .color-swatch { width: 26px; height: 26px; border-radius: 50%; cursor: pointer; border: 2px solid rgba(255,255,255,0.1); }
-        .color-swatch.active { border-color: white; transform: scale(1.2); }
+        .intensity-section { display: flex; align-items: center; gap: 8px; font-size: 0.7rem; }
+        input[type=range] { width: 70px; accent-color: var(--accent-color); }
 
-        .intensity-section { display: flex; align-items: center; gap: 10px; background: #222; padding: 8px 15px; border-radius: 50px; font-size: 0.75rem; }
-        input[type=range] { width: 80px; accent-color: var(--accent-color); }
+        #clear-btn { margin-left: auto; padding: 8px 15px; background: #ff5555; color: white; border: none; border-radius: 20px; font-weight: bold; cursor: pointer; font-size: 0.75rem; }
 
-        #clear-btn { margin-left: auto; padding: 8px 15px; background: #ff5555; color: white; border: none; border-radius: 50px; font-weight: bold; cursor: pointer; font-size: 0.8rem; }
-
-        #canvas-container { flex-grow: 1; position: relative; background: #000; }
+        #canvas-container { flex-grow: 1; position: relative; background: #000; overflow: hidden; }
         canvas { display: block; touch-action: none; }
-        .guide { position: absolute; background: rgba(255, 255, 255, 0.05); pointer-events: none; }
-        #guide-h { width: 100%; height: 1px; top: 50%; left: 0; }
-        #guide-v { width: 1px; height: 100%; left: 50%; top: 0; }
+        
+        /* Guías de centro */
+        #center-mark {
+            position: absolute; width: 6px; height: 6px; background: var(--accent-color);
+            border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            pointer-events: none; opacity: 0.5;
+        }
     </style>
 </head>
 <body>
@@ -85,6 +93,17 @@
         <button class="tool-btn active" id="btn-draw" title="Dibujar">✏️</button>
         <button class="tool-btn" id="btn-fill" title="Rellenar">🪣</button>
         <button class="tool-btn" id="undo-btn" title="Deshacer">↩️</button>
+    </div>
+
+    <div class="sym-selector">
+        <span style="font-size: 0.7rem;">Simetría:</span>
+        <select id="sym-count">
+            <option value="4">4 Lados</option>
+            <option value="6">6 Lados</option>
+            <option value="8" selected>8 Lados</option>
+            <option value="12">12 Lados</option>
+            <option value="16">16 Lados</option>
+        </select>
     </div>
 
     <div class="color-section" id="palette">
@@ -100,7 +119,7 @@
     </div>
 
     <div class="intensity-section">
-        <span>Luz</span>
+        <span>Brillo</span>
         <input type="range" id="lightness" min="5" max="95" value="50">
     </div>
 
@@ -108,8 +127,7 @@
 </div>
 
 <div id="canvas-container">
-    <div id="guide-h" class="guide"></div>
-    <div id="guide-v" class="guide"></div>
+    <div id="center-mark"></div>
     <canvas id="paintCanvas"></canvas>
 </div>
 
@@ -118,37 +136,29 @@
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
     const swatches = document.querySelectorAll('.color-swatch');
     const lightSlider = document.getElementById('lightness');
-    const undoBtn = document.getElementById('undo-btn');
+    const symSelect = document.getElementById('sym-count');
     
     let drawing = false;
     let mode = 'draw';
     let currentHue = 330, currentSat = 100, currentLight = 50;
     let points = [];
-    
-    // HISTORIAL
     let historyStack = [];
-    const maxHistory = 20;
 
+    // --- HISTORIAL ---
     function saveHistory() {
-        if (historyStack.length >= maxHistory) historyStack.shift();
+        if (historyStack.length >= 20) historyStack.shift();
         historyStack.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
     }
+    document.getElementById('undo-btn').onclick = () => { if (historyStack.length > 0) ctx.putImageData(historyStack.pop(), 0, 0); };
 
-    undoBtn.onclick = () => {
-        if (historyStack.length > 0) {
-            ctx.putImageData(historyStack.pop(), 0, 0);
-        }
-    };
-
-    // HERRAMIENTAS
+    // --- UI Y MODOS ---
+    function setMode(m) {
+        mode = m;
+        document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(`btn-${m}`).classList.add('active');
+    }
     document.getElementById('btn-draw').onclick = () => setMode('draw');
     document.getElementById('btn-fill').onclick = () => setMode('fill');
-
-    function setMode(newMode) {
-        mode = newMode;
-        document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
-        if(newMode !== 'undo') document.getElementById(`btn-${newMode}`).classList.add('active');
-    }
 
     function updatePaletteUI() {
         swatches.forEach(s => {
@@ -158,62 +168,74 @@
     }
 
     function resize() {
-        const tempImage = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const temp = ctx.getImageData(0, 0, canvas.width, canvas.height);
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight - document.getElementById('toolbar').offsetHeight;
-        ctx.fillStyle = '#0a0a0a';
+        ctx.fillStyle = '#080808';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.putImageData(tempImage, 0, 0);
+        ctx.putImageData(temp, 0, 0);
     }
 
-    window.addEventListener('resize', resize);
+    window.onresize = resize;
     lightSlider.oninput = () => { currentLight = lightSlider.value; updatePaletteUI(); };
-
-    swatches.forEach(swatch => {
-        swatch.onclick = () => {
+    swatches.forEach(sw => {
+        sw.onclick = () => {
             document.querySelector('.color-swatch.active').classList.remove('active');
-            swatch.classList.add('active');
-            currentHue = swatch.dataset.h;
-            currentSat = swatch.dataset.s !== undefined ? swatch.dataset.s : 100;
+            sw.classList.add('active');
+            currentHue = sw.dataset.h;
+            currentSat = sw.dataset.s !== undefined ? sw.dataset.s : 100;
         };
     });
 
-    // FLOOD FILL
-    function floodFill(startX, startY, fillColor) {
-        saveHistory(); // Guardar antes de rellenar
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const targetColor = getPixel(imageData, startX, startY);
-        const fillRGB = hslToRgb(fillColor.h, fillColor.s, fillColor.l);
-
-        if (colorsMatch(targetColor, fillRGB)) return;
-
-        const pixelsToCheck = [[startX, startY]];
-        while (pixelsToCheck.length > 0) {
-            const [x, y] = pixelsToCheck.pop();
-            const currentColor = getPixel(imageData, x, y);
-
-            if (colorsMatch(currentColor, targetColor)) {
-                setPixel(imageData, x, y, fillRGB);
-                if (x > 0) pixelsToCheck.push([x - 1, y]);
-                if (x < canvas.width - 1) pixelsToCheck.push([x + 1, y]);
-                if (y > 0) pixelsToCheck.push([x, y - 1]);
-                if (y < canvas.height - 1) pixelsToCheck.push([x, y + 1]);
-            }
-        }
-        ctx.putImageData(imageData, 0, 0);
-    }
-
+    // --- RELLENO SIMÉTRICO ---
     function getPixel(img, x, y) {
         const i = (y * img.width + x) * 4;
         return [img.data[i], img.data[i+1], img.data[i+2]];
     }
 
-    function setPixel(img, x, y, color) {
-        const i = (y * img.width + x) * 4;
-        img.data[i] = color[0]; img.data[i+1] = color[1]; img.data[i+2] = color[2]; img.data[i+3] = 255;
+    function floodFillRadial(startX, startY, fillHsl) {
+        saveHistory();
+        const slices = parseInt(symSelect.value);
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+
+        // Calcular todas las posiciones de relleno basadas en la rotación
+        const dx = startX - centerX;
+        const dy = startY - centerY;
+        const radius = Math.sqrt(dx*dx + dy*dy);
+        const startAngle = Math.atan2(dy, dx);
+
+        for (let i = 0; i < slices; i++) {
+            const angle = startAngle + (i * 2 * Math.PI / slices);
+            const tx = Math.round(centerX + radius * Math.cos(angle));
+            const ty = Math.round(centerY + radius * Math.sin(angle));
+            
+            if (tx >= 0 && tx < canvas.width && ty >= 0 && ty < canvas.height) {
+                applyFloodFill(tx, ty, fillHsl);
+            }
+        }
     }
 
-    function colorsMatch(c1, c2) { return c1[0] === c2[0] && c1[1] === c2[1] && c1[2] === c2[2]; }
+    function applyFloodFill(x, y, hsl) {
+        const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const target = getPixel(img, x, y);
+        const fill = hslToRgb(hsl.h, hsl.s, hsl.l);
+        if (target[0] === fill[0] && target[1] === fill[1] && target[2] === fill[2]) return;
+
+        const stack = [[x, y]];
+        while (stack.length > 0) {
+            const [cx, cy] = stack.pop();
+            const idx = (cy * canvas.width + cx) * 4;
+            if (img.data[idx] === target[0] && img.data[idx+1] === target[1] && img.data[idx+2] === target[2]) {
+                img.data[idx] = fill[0]; img.data[idx+1] = fill[1]; img.data[idx+2] = fill[2]; img.data[idx+3] = 255;
+                if (cx > 0) stack.push([cx - 1, cy]);
+                if (cx < canvas.width - 1) stack.push([cx + 1, cy]);
+                if (cy > 0) stack.push([cx, cy - 1]);
+                if (cy < canvas.height - 1) stack.push([cx, cy + 1]);
+            }
+        }
+        ctx.putImageData(img, 0, 0);
+    }
 
     function hslToRgb(h, s, l) {
         l /= 100; s /= 100;
@@ -223,26 +245,20 @@
         return [255 * f(0), 255 * f(8), 255 * f(4)].map(Math.round);
     }
 
-    // DIBUJO
+    // --- DIBUJO RADIAL ---
     function getPos(e) {
         const rect = canvas.getBoundingClientRect();
-        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-        return { x: Math.round(clientX - rect.left), y: Math.round(clientY - rect.top) };
+        const cx = e.touches ? e.touches[0].clientX : e.clientX;
+        const cy = e.touches ? e.touches[0].clientY : e.clientY;
+        return { x: cx - rect.left, y: cy - rect.top };
     }
 
     canvas.onmousedown = (e) => {
         const pos = getPos(e);
         if (mode === 'fill') {
-            const w = canvas.width, h = canvas.height;
-            const color = { h: currentHue, s: currentSat, l: currentLight };
-            // El guardado de historia se hace dentro de floodFill
-            floodFill(pos.x, pos.y, color);
-            floodFill(w - pos.x, pos.y, color);
-            floodFill(pos.x, h - pos.y, color);
-            floodFill(w - pos.x, h - pos.y, color);
+            floodFillRadial(pos.x, pos.y, {h: currentHue, s: currentSat, l: currentLight});
         } else {
-            saveHistory(); // Guardar antes de empezar un trazo
+            saveHistory();
             drawing = true;
             points = [pos, pos, pos];
         }
@@ -251,38 +267,52 @@
     window.onmousemove = (e) => {
         if (!drawing || mode !== 'draw') return;
         const pos = getPos(e);
-        const lastPoint = points[points.length - 1];
-        if (Math.hypot(pos.x - lastPoint.x, pos.y - lastPoint.y) > 2) {
+        const last = points[points.length-1];
+        if (Math.hypot(pos.x - last.x, pos.y - last.y) > 2) {
             points.push(pos);
             const i = points.length - 2;
             const xc = (points[i].x + points[i + 1].x) / 2;
             const yc = (points[i].y + points[i + 1].y) / 2;
-            ctx.lineWidth = 5; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+
+            ctx.lineWidth = 4; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
             ctx.strokeStyle = `hsl(${currentHue}, ${currentSat}%, ${currentLight}%)`;
-            const w = canvas.width, h = canvas.height;
-            drawSym(points[i-1].x, points[i-1].y, points[i].x, points[i].y, xc, yc, w, h);
-            if (points.length > 20) points.shift();
+
+            drawRadial(points[i-1], points[i], {x: xc, y: yc});
+            if (points.length > 15) points.shift();
         }
     };
 
-    function drawSym(x0, y0, x1, y1, xc, yc, w, h) {
-        const r = (ax, ay, bx, by, cx, cy) => {
-            ctx.beginPath(); ctx.moveTo(ax, ay); ctx.quadraticCurveTo(bx, by, cx, cy); ctx.stroke();
-        };
-        r(x0, y0, x1, y1, xc, yc);
-        r(w - x0, y0, w - x1, y1, w - xc, yc);
-        r(x0, h - y0, x1, h - y1, xc, h - yc);
-        r(w - x0, h - y0, w - x1, h - y1, w - xc, h - yc);
+    function drawRadial(p0, p1, mid) {
+        const slices = parseInt(symSelect.value);
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+
+        for (let i = 0; i < slices; i++) {
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            ctx.rotate((i * 2 * Math.PI) / slices);
+            
+            // Dibujar la curva suavizada
+            ctx.beginPath();
+            ctx.moveTo(p0.x - centerX, p0.y - centerY);
+            ctx.quadraticCurveTo(p1.x - centerX, p1.y - centerY, mid.x - centerX, mid.y - centerY);
+            ctx.stroke();
+            
+            // Efecto Espejo dentro de cada rebanada
+            ctx.scale(1, -1);
+            ctx.beginPath();
+            ctx.moveTo(p0.x - centerX, p0.y - centerY);
+            ctx.quadraticCurveTo(p1.x - centerX, p1.y - centerY, mid.x - centerX, mid.y - centerY);
+            ctx.stroke();
+            
+            ctx.restore();
+        }
     }
 
     window.onmouseup = () => drawing = false;
     canvas.ontouchstart = (e) => { e.preventDefault(); canvas.onmousedown(e); };
     canvas.ontouchmove = (e) => { e.preventDefault(); window.onmousemove(e); };
-    document.getElementById('clear-btn').onclick = () => { 
-        saveHistory();
-        ctx.fillStyle = '#0a0a0a'; 
-        ctx.fillRect(0, 0, canvas.width, canvas.height); 
-    };
+    document.getElementById('clear-btn').onclick = () => { saveHistory(); ctx.fillStyle='#080808'; ctx.fillRect(0,0,canvas.width,canvas.height); };
 
     updatePaletteUI();
     resize();

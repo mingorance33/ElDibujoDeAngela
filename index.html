@@ -9,7 +9,6 @@
             --bg-color: #0a0a0a;
             --panel-color: #161616;
             --accent-color: #ff79c6;
-            --tool-inactive: #444;
         }
 
         body, html {
@@ -28,94 +27,38 @@
             flex-wrap: wrap;
             align-items: center;
             padding: 12px 20px;
-            gap: 20px;
+            gap: 15px;
             box-shadow: 0 4px 30px rgba(0,0,0,0.9);
             z-index: 10;
         }
 
-        .brand h1 {
-            color: var(--accent-color);
-            font-size: 1rem;
-            margin: 0;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-        }
+        .brand h1 { color: var(--accent-color); font-size: 0.9rem; margin: 0; text-transform: uppercase; }
 
-        /* Sección de Herramientas */
-        .tools-group {
-            display: flex;
-            background: #222;
-            padding: 5px;
-            border-radius: 12px;
-            gap: 5px;
-        }
+        .tools-group { display: flex; background: #222; padding: 5px; border-radius: 12px; gap: 5px; }
 
         .tool-btn {
-            padding: 8px 15px;
-            border: none;
-            background: transparent;
-            color: white;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            transition: 0.2s;
+            padding: 8px 12px; border: none; background: transparent;
+            color: white; border-radius: 8px; cursor: pointer; font-size: 0.85rem; transition: 0.2s;
         }
 
-        .tool-btn.active {
-            background: var(--accent-color);
-            font-weight: bold;
-        }
+        .tool-btn.active { background: var(--accent-color); font-weight: bold; }
+        
+        #undo-btn { background: #444; }
+        #undo-btn:active { transform: scale(0.95); }
 
-        .color-section {
-            display: flex;
-            gap: 10px;
-            background: #222;
-            padding: 8px 15px;
-            border-radius: 50px;
-        }
+        .color-section { display: flex; gap: 8px; background: #222; padding: 8px 12px; border-radius: 50px; }
 
-        .color-swatch {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            cursor: pointer;
-            border: 2px solid rgba(255,255,255,0.1);
-        }
+        .color-swatch { width: 26px; height: 26px; border-radius: 50%; cursor: pointer; border: 2px solid rgba(255,255,255,0.1); }
+        .color-swatch.active { border-color: white; transform: scale(1.2); }
 
-        .color-swatch.active {
-            border-color: white;
-            transform: scale(1.2);
-        }
+        .intensity-section { display: flex; align-items: center; gap: 10px; background: #222; padding: 8px 15px; border-radius: 50px; font-size: 0.75rem; }
+        input[type=range] { width: 80px; accent-color: var(--accent-color); }
 
-        .intensity-section {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            background: #222;
-            padding: 8px 15px;
-            border-radius: 50px;
-            font-size: 0.8rem;
-        }
-
-        input[type=range] { width: 100px; accent-color: var(--accent-color); }
-
-        #clear-btn {
-            margin-left: auto;
-            padding: 8px 20px;
-            background: #ff5555;
-            color: white;
-            border: none;
-            border-radius: 50px;
-            font-weight: bold;
-            cursor: pointer;
-        }
+        #clear-btn { margin-left: auto; padding: 8px 15px; background: #ff5555; color: white; border: none; border-radius: 50px; font-weight: bold; cursor: pointer; font-size: 0.8rem; }
 
         #canvas-container { flex-grow: 1; position: relative; background: #000; }
-        canvas { display: block; }
-        .guide {
-            position: absolute; background: rgba(255, 255, 255, 0.05);
-            pointer-events: none;
-        }
+        canvas { display: block; touch-action: none; }
+        .guide { position: absolute; background: rgba(255, 255, 255, 0.05); pointer-events: none; }
         #guide-h { width: 100%; height: 1px; top: 50%; left: 0; }
         #guide-v { width: 1px; height: 100%; left: 50%; top: 0; }
     </style>
@@ -126,8 +69,9 @@
     <div class="brand"><h1>Angela Studio</h1></div>
 
     <div class="tools-group">
-        <button class="tool-btn active" id="btn-draw">✏️ Dibujar</button>
-        <button class="tool-btn" id="btn-fill">🪣 Rellenar</button>
+        <button class="tool-btn active" id="btn-draw" title="Dibujar">✏️</button>
+        <button class="tool-btn" id="btn-fill" title="Rellenar">🪣</button>
+        <button class="tool-btn" id="undo-btn" title="Deshacer">↩️</button>
     </div>
 
     <div class="color-section" id="palette">
@@ -143,7 +87,7 @@
     </div>
 
     <div class="intensity-section">
-        <span>Brillo</span>
+        <span>Luz</span>
         <input type="range" id="lightness" min="5" max="95" value="50">
     </div>
 
@@ -161,23 +105,38 @@
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
     const swatches = document.querySelectorAll('.color-swatch');
     const lightSlider = document.getElementById('lightness');
+    const undoBtn = document.getElementById('undo-btn');
     
     let drawing = false;
-    let mode = 'draw'; // 'draw' o 'fill'
+    let mode = 'draw';
     let currentHue = 330, currentSat = 100, currentLight = 50;
     let points = [];
+    
+    // HISTORIAL
+    let historyStack = [];
+    const maxHistory = 20;
 
-    // --- LÓGICA DE HERRAMIENTAS ---
+    function saveHistory() {
+        if (historyStack.length >= maxHistory) historyStack.shift();
+        historyStack.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+    }
+
+    undoBtn.onclick = () => {
+        if (historyStack.length > 0) {
+            ctx.putImageData(historyStack.pop(), 0, 0);
+        }
+    };
+
+    // HERRAMIENTAS
     document.getElementById('btn-draw').onclick = () => setMode('draw');
     document.getElementById('btn-fill').onclick = () => setMode('fill');
 
     function setMode(newMode) {
         mode = newMode;
         document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById(`btn-${newMode}`).classList.add('active');
+        if(newMode !== 'undo') document.getElementById(`btn-${newMode}`).classList.add('active');
     }
 
-    // --- PALETA Y UI ---
     function updatePaletteUI() {
         swatches.forEach(s => {
             const h = s.dataset.h, sat = s.dataset.s !== undefined ? s.dataset.s : 100;
@@ -186,12 +145,12 @@
     }
 
     function resize() {
-        const prevData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const tempImage = ctx.getImageData(0, 0, canvas.width, canvas.height);
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight - document.getElementById('toolbar').offsetHeight;
         ctx.fillStyle = '#0a0a0a';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.putImageData(prevData, 0, 0);
+        ctx.putImageData(tempImage, 0, 0);
     }
 
     window.addEventListener('resize', resize);
@@ -206,8 +165,9 @@
         };
     });
 
-    // --- ALGORITMO FLOOD FILL (RELLENO) ---
+    // FLOOD FILL
     function floodFill(startX, startY, fillColor) {
+        saveHistory(); // Guardar antes de rellenar
         const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         const targetColor = getPixel(imageData, startX, startY);
         const fillRGB = hslToRgb(fillColor.h, fillColor.s, fillColor.l);
@@ -230,22 +190,17 @@
         ctx.putImageData(imageData, 0, 0);
     }
 
-    function getPixel(imageData, x, y) {
-        const index = (y * imageData.width + x) * 4;
-        return [imageData.data[index], imageData.data[index+1], imageData.data[index+2]];
+    function getPixel(img, x, y) {
+        const i = (y * img.width + x) * 4;
+        return [img.data[i], img.data[i+1], img.data[i+2]];
     }
 
-    function setPixel(imageData, x, y, color) {
-        const index = (y * imageData.width + x) * 4;
-        imageData.data[index] = color[0];
-        imageData.data[index+1] = color[1];
-        imageData.data[index+2] = color[2];
-        imageData.data[index+3] = 255;
+    function setPixel(img, x, y, color) {
+        const i = (y * img.width + x) * 4;
+        img.data[i] = color[0]; img.data[i+1] = color[1]; img.data[i+2] = color[2]; img.data[i+3] = 255;
     }
 
-    function colorsMatch(c1, c2) {
-        return c1[0] === c2[0] && c1[1] === c2[1] && c1[2] === c2[2];
-    }
+    function colorsMatch(c1, c2) { return c1[0] === c2[0] && c1[1] === c2[1] && c1[2] === c2[2]; }
 
     function hslToRgb(h, s, l) {
         l /= 100; s /= 100;
@@ -255,7 +210,7 @@
         return [255 * f(0), 255 * f(8), 255 * f(4)].map(Math.round);
     }
 
-    // --- LÓGICA DE DIBUJO ---
+    // DIBUJO
     function getPos(e) {
         const rect = canvas.getBoundingClientRect();
         const clientX = e.touches ? e.touches[0].clientX : e.clientX;
@@ -268,11 +223,13 @@
         if (mode === 'fill') {
             const w = canvas.width, h = canvas.height;
             const color = { h: currentHue, s: currentSat, l: currentLight };
+            // El guardado de historia se hace dentro de floodFill
             floodFill(pos.x, pos.y, color);
             floodFill(w - pos.x, pos.y, color);
             floodFill(pos.x, h - pos.y, color);
             floodFill(w - pos.x, h - pos.y, color);
         } else {
+            saveHistory(); // Guardar antes de empezar un trazo
             drawing = true;
             points = [pos, pos, pos];
         }
@@ -287,10 +244,8 @@
             const i = points.length - 2;
             const xc = (points[i].x + points[i + 1].x) / 2;
             const yc = (points[i].y + points[i + 1].y) / 2;
-            
             ctx.lineWidth = 5; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
             ctx.strokeStyle = `hsl(${currentHue}, ${currentSat}%, ${currentLight}%)`;
-            
             const w = canvas.width, h = canvas.height;
             drawSym(points[i-1].x, points[i-1].y, points[i].x, points[i].y, xc, yc, w, h);
             if (points.length > 20) points.shift();
@@ -310,7 +265,11 @@
     window.onmouseup = () => drawing = false;
     canvas.ontouchstart = (e) => { e.preventDefault(); canvas.onmousedown(e); };
     canvas.ontouchmove = (e) => { e.preventDefault(); window.onmousemove(e); };
-    document.getElementById('clear-btn').onclick = () => { ctx.fillStyle = '#0a0a0a'; ctx.fillRect(0, 0, canvas.width, canvas.height); };
+    document.getElementById('clear-btn').onclick = () => { 
+        saveHistory();
+        ctx.fillStyle = '#0a0a0a'; 
+        ctx.fillRect(0, 0, canvas.width, canvas.height); 
+    };
 
     updatePaletteUI();
     resize();

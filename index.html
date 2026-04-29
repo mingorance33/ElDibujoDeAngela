@@ -6,8 +6,8 @@
     <title>El Dibujo de Angela</title>
     <style>
         :root {
-            --bg-color: #0f0f0f;
-            --panel-color: #1a1a1a;
+            --bg-color: #0a0a0a;
+            --panel-color: #161616;
             --accent-color: #ff79c6;
         }
 
@@ -16,105 +16,97 @@
             width: 100%; height: 100%;
             overflow: hidden;
             background-color: var(--bg-color);
-            font-family: 'Segoe UI', system-ui, sans-serif;
+            font-family: 'Segoe UI', sans-serif;
             display: flex; flex-direction: column;
             color: white;
         }
 
-        /* Barra de Herramientas Principal */
         #toolbar {
             height: auto;
-            min-height: 80px;
             background: var(--panel-color);
             display: flex;
             flex-wrap: wrap;
             align-items: center;
-            padding: 10px 20px;
-            gap: 20px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.8);
+            padding: 15px 25px;
+            gap: 25px;
+            box-shadow: 0 4px 30px rgba(0,0,0,0.9);
             z-index: 10;
-            border-bottom: 2px solid #333;
         }
 
         .brand h1 {
             color: var(--accent-color);
-            font-size: 1.1rem;
+            font-size: 1.2rem;
             margin: 0;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 1.5px;
+            text-shadow: 0 0 10px rgba(255, 121, 198, 0.3);
         }
 
-        /* Contenedor de colores */
         .color-section {
             display: flex;
-            align-items: center;
             gap: 12px;
-            background: #252525;
-            padding: 8px 15px;
-            border-radius: 40px;
-        }
-
-        .swatches-grid {
-            display: flex;
-            gap: 8px;
+            background: #222;
+            padding: 10px 18px;
+            border-radius: 50px;
         }
 
         .color-swatch {
-            width: 30px;
-            height: 30px;
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
             cursor: pointer;
-            border: 2px solid transparent;
-            transition: transform 0.2s;
+            border: 2px solid rgba(255,255,255,0.1);
+            transition: transform 0.2s, background-color 0.1s ease; /* Transición suave de color */
         }
 
         .color-swatch.active {
             border-color: white;
-            transform: scale(1.2);
-            box-shadow: 0 0 10px rgba(255,255,255,0.3);
+            transform: scale(1.25);
+            box-shadow: 0 0 15px rgba(255,255,255,0.2);
         }
 
-        /* Selector de Oscuridad */
         .intensity-section {
             display: flex;
             align-items: center;
-            gap: 10px;
-            background: #252525;
-            padding: 8px 15px;
-            border-radius: 40px;
+            gap: 15px;
+            background: #222;
+            padding: 10px 20px;
+            border-radius: 50px;
         }
 
         input[type=range] {
             cursor: pointer;
-            width: 120px;
+            width: 150px;
             accent-color: var(--accent-color);
         }
 
-        label { font-size: 0.8rem; opacity: 0.8; }
-
         #clear-btn {
             margin-left: auto;
-            padding: 10px 20px;
-            background: #ff5555;
-            color: white;
-            border: none;
-            border-radius: 20px;
+            padding: 10px 25px;
+            background: transparent;
+            color: #ff5555;
+            border: 2px solid #ff5555;
+            border-radius: 50px;
             font-weight: bold;
             cursor: pointer;
+            transition: all 0.3s;
         }
 
-        /* Lienzo */
+        #clear-btn:hover {
+            background: #ff5555;
+            color: white;
+        }
+
         #canvas-container {
             flex-grow: 1;
             position: relative;
-            background: radial-gradient(circle, #1a1a1a 0%, #000000 100%);
+            background: #000;
         }
 
         canvas { display: block; }
 
         .guide {
             position: absolute;
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.03);
             pointer-events: none;
         }
         #guide-h { width: 100%; height: 1px; top: 50%; left: 0; }
@@ -124,31 +116,26 @@
 <body>
 
 <div id="toolbar">
-    <div class="brand">
-        <h1>El Dibujo de Angela</h1>
-    </div>
+    <div class="brand"><h1>El Dibujo de Angela</h1></div>
 
-    <div class="color-section">
-        <div class="swatches-grid" id="palette">
-            <!-- Colores base (Hue) -->
-            <div class="color-swatch active" style="background: hsl(330, 100%, 50%);" data-h="330"></div>
-            <div class="color-swatch" style="background: hsl(0, 100%, 50%);" data-h="0"></div>
-            <div class="color-swatch" style="background: hsl(30, 100%, 50%);" data-h="30"></div>
-            <div class="color-swatch" style="background: hsl(60, 100%, 50%);" data-h="60"></div>
-            <div class="color-swatch" style="background: hsl(120, 100%, 50%);" data-h="120"></div>
-            <div class="color-swatch" style="background: hsl(180, 100%, 50%);" data-h="180"></div>
-            <div class="color-swatch" style="background: hsl(220, 100%, 50%);" data-h="220"></div>
-            <div class="color-swatch" style="background: hsl(280, 100%, 50%);" data-h="280"></div>
-            <div class="color-swatch" style="background: hsl(0, 0%, 100%);" data-h="0" data-s="0"></div>
-        </div>
+    <div class="color-section" id="palette">
+        <div class="color-swatch active" data-h="330"></div>
+        <div class="color-swatch" data-h="0"></div>
+        <div class="color-swatch" data-h="30"></div>
+        <div class="color-swatch" data-h="60"></div>
+        <div class="color-swatch" data-h="120"></div>
+        <div class="color-swatch" data-h="180"></div>
+        <div class="color-swatch" data-h="220"></div>
+        <div class="color-swatch" data-h="280"></div>
+        <div class="color-swatch" data-h="0" data-s="0"></div>
     </div>
 
     <div class="intensity-section">
         <label>Luz / Sombra</label>
-        <input type="range" id="lightness" min="10" max="90" value="50">
+        <input type="range" id="lightness" min="5" max="95" value="50">
     </div>
 
-    <button id="clear-btn">Limpiar</button>
+    <button id="clear-btn">Borrar Lienzo</button>
 </div>
 
 <div id="canvas-container">
@@ -160,7 +147,7 @@
 <script>
     const canvas = document.getElementById('paintCanvas');
     const ctx = canvas.getContext('2d');
-    const palette = document.getElementById('palette');
+    const swatches = document.querySelectorAll('.color-swatch');
     const lightSlider = document.getElementById('lightness');
     const clearBtn = document.getElementById('clear-btn');
 
@@ -168,7 +155,17 @@
     let currentHue = 330;
     let currentSat = 100;
     let currentLight = 50;
+    
+    // Buffer para el suavizado extremo
     let points = []; 
+
+    function updatePaletteUI() {
+        swatches.forEach(s => {
+            const h = s.dataset.h;
+            const sat = s.dataset.s !== undefined ? s.dataset.s : 100;
+            s.style.backgroundColor = `hsl(${h}, ${sat}%, ${lightSlider.value}%)`;
+        });
+    }
 
     function resize() {
         canvas.width = window.innerWidth;
@@ -177,33 +174,25 @@
     }
 
     function clearCanvas() {
-        ctx.fillStyle = '#0f0f0f';
+        ctx.fillStyle = '#0a0a0a';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
 
+    // Inicialización
     window.addEventListener('resize', resize);
-    setTimeout(resize, 100);
-
-    // Selección de color base
-    palette.addEventListener('click', (e) => {
-        if (e.target.classList.contains('color-swatch')) {
-            document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
-            e.target.classList.add('active');
-            
-            currentHue = e.target.dataset.h;
-            // Si es blanco/gris (sat 0)
-            currentSat = e.target.dataset.s !== undefined ? e.target.dataset.s : 100;
-        }
+    lightSlider.addEventListener('input', () => {
+        currentLight = lightSlider.value;
+        updatePaletteUI();
     });
 
-    // Control de oscuridad
-    lightSlider.addEventListener('input', (e) => {
-        currentLight = e.target.value;
+    swatches.forEach(swatch => {
+        swatch.addEventListener('click', () => {
+            document.querySelector('.color-swatch.active').classList.remove('active');
+            swatch.classList.add('active');
+            currentHue = swatch.dataset.h;
+            currentSat = swatch.dataset.s !== undefined ? swatch.dataset.s : 100;
+        });
     });
-
-    function getFullColor() {
-        return `hsl(${currentHue}, ${currentSat}%, ${currentLight}%)`;
-    }
 
     function getPos(e) {
         const rect = canvas.getBoundingClientRect();
@@ -215,40 +204,56 @@
     function startDrawing(e) {
         drawing = true;
         points = [];
-        points.push(getPos(e));
+        const pos = getPos(e);
+        // Añadimos el mismo punto varias veces para estabilizar el inicio
+        for(let i=0; i<3; i++) points.push(pos);
     }
 
     function draw(e) {
         if (!drawing) return;
         const pos = getPos(e);
-        points.push(pos);
+        
+        // SUAVIZADO EXTRA: Solo registramos el punto si se ha movido lo suficiente
+        // Esto evita el "ruido" de la mano
+        const lastPoint = points[points.length - 1];
+        const dist = Math.hypot(pos.x - lastPoint.x, pos.y - lastPoint.y);
+        
+        if (dist > 2) {
+            points.push(pos);
+            
+            // Mantener solo los últimos puntos para el cálculo de la curva
+            if (points.length > 3) {
+                const i = points.length - 2;
+                
+                // Calculamos el punto medio entre los dos últimos para la curva de Bézier
+                const xc = (points[i].x + points[i + 1].x) / 2;
+                const yc = (points[i].y + points[i + 1].y) / 2;
 
-        if (points.length < 3) return;
+                ctx.lineWidth = 5;
+                ctx.lineJoin = 'round';
+                ctx.lineCap = 'round';
+                ctx.strokeStyle = `hsl(${currentHue}, ${currentSat}%, ${currentLight}%)`;
 
-        ctx.lineWidth = 4;
-        ctx.lineJoin = 'round';
-        ctx.lineCap = 'round';
-        ctx.strokeStyle = getFullColor();
+                const w = canvas.width;
+                const h = canvas.height;
 
-        const i = points.length - 2;
-        const xc = (points[i].x + points[i + 1].x) / 2;
-        const yc = (points[i].y + points[i + 1].y) / 2;
-
-        const w = canvas.width;
-        const h = canvas.height;
-
-        // Cuadrantes Simétricos
-        drawSymmetry(points[i-1].x, points[i-1].y, points[i].x, points[i].y, xc, yc, w, h);
+                // Dibujar con simetría cuádruple
+                drawSymmetric(points[i-1].x, points[i-1].y, points[i].x, points[i].y, xc, yc, w, h);
+                
+                // Si el buffer es muy grande, lo limpiamos un poco
+                if (points.length > 20) points.shift();
+            }
+        }
     }
 
-    function drawSymmetry(x0, y0, x1, y1, xc, yc, w, h) {
+    function drawSymmetric(x0, y0, x1, y1, xc, yc, w, h) {
         // 1. Original
         render(x0, y0, x1, y1, xc, yc);
-        // 2. Espejo H
+        // 2. Espejo Horizontal
         render(w - x0, y0, w - x1, y1, w - xc, yc);
-        // 3. Espejo V
+        // 3. Espejo Vertical
         render(x0, h - y0, x1, h - y1, xc, h - yc);
-        // 4. Espejo Total
+        // 4. Espejo Total (Caleidoscopio)
         render(w - x0, h - y0, w - x1, h - y1, w - xc, h - yc);
     }
 
@@ -261,6 +266,7 @@
 
     function stopDrawing() { drawing = false; }
 
+    // Eventos
     canvas.addEventListener('mousedown', startDrawing);
     canvas.addEventListener('mousemove', draw);
     window.addEventListener('mouseup', stopDrawing);
@@ -268,6 +274,10 @@
     canvas.addEventListener('touchmove', (e) => { e.preventDefault(); draw(e); }, {passive: false});
     canvas.addEventListener('touchend', stopDrawing);
     clearBtn.addEventListener('click', clearCanvas);
+
+    // Iniciar paleta
+    updatePaletteUI();
+    setTimeout(resize, 100);
 
 </script>
 </body>

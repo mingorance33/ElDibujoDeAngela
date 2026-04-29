@@ -6,91 +6,115 @@
     <title>El Dibujo de Angela</title>
     <style>
         :root {
-            --bg-color: #121212;
-            --panel-color: #1e1e1e;
+            --bg-color: #0f0f0f;
+            --panel-color: #1a1a1a;
             --accent-color: #ff79c6;
         }
 
         body, html {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
+            margin: 0; padding: 0;
+            width: 100%; height: 100%;
             overflow: hidden;
             background-color: var(--bg-color);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            display: flex;
-            flex-direction: column;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            display: flex; flex-direction: column;
+            color: white;
         }
 
-        /* Barra de Herramientas */
+        /* Barra de Herramientas Principal */
         #toolbar {
-            height: 70px;
+            height: auto;
+            min-height: 80px;
             background: var(--panel-color);
             display: flex;
+            flex-wrap: wrap;
             align-items: center;
-            padding: 0 25px;
-            gap: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+            padding: 10px 20px;
+            gap: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.8);
             z-index: 10;
-            border-bottom: 2px solid var(--accent-color);
+            border-bottom: 2px solid #333;
         }
 
-        h1 {
+        .brand h1 {
             color: var(--accent-color);
-            font-size: 1.2rem;
-            margin-right: 20px;
-            white-space: nowrap;
+            font-size: 1.1rem;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Contenedor de colores */
+        .color-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #252525;
+            padding: 8px 15px;
+            border-radius: 40px;
+        }
+
+        .swatches-grid {
+            display: flex;
+            gap: 8px;
         }
 
         .color-swatch {
-            width: 35px;
-            height: 35px;
+            width: 30px;
+            height: 30px;
             border-radius: 50%;
             cursor: pointer;
-            border: 3px solid transparent;
-            transition: all 0.2s ease;
+            border: 2px solid transparent;
+            transition: transform 0.2s;
         }
 
         .color-swatch.active {
             border-color: white;
-            transform: scale(1.1);
-            box-shadow: 0 0 10px rgba(255,255,255,0.5);
+            transform: scale(1.2);
+            box-shadow: 0 0 10px rgba(255,255,255,0.3);
         }
+
+        /* Selector de Oscuridad */
+        .intensity-section {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #252525;
+            padding: 8px 15px;
+            border-radius: 40px;
+        }
+
+        input[type=range] {
+            cursor: pointer;
+            width: 120px;
+            accent-color: var(--accent-color);
+        }
+
+        label { font-size: 0.8rem; opacity: 0.8; }
 
         #clear-btn {
             margin-left: auto;
             padding: 10px 20px;
-            background: transparent;
-            color: #ff5555;
-            border: 2px solid #ff5555;
+            background: #ff5555;
+            color: white;
+            border: none;
             border-radius: 20px;
             font-weight: bold;
             cursor: pointer;
-            transition: all 0.3s;
         }
 
-        #clear-btn:hover {
-            background: #ff5555;
-            color: white;
-        }
-
-        /* Área de lienzo */
+        /* Lienzo */
         #canvas-container {
             flex-grow: 1;
             position: relative;
-            cursor: crosshair;
             background: radial-gradient(circle, #1a1a1a 0%, #000000 100%);
         }
 
-        canvas {
-            display: block;
-        }
+        canvas { display: block; }
 
-        /* Guías de simetría */
         .guide {
             position: absolute;
-            background: rgba(255, 121, 198, 0.15);
+            background: rgba(255, 255, 255, 0.05);
             pointer-events: none;
         }
         #guide-h { width: 100%; height: 1px; top: 50%; left: 0; }
@@ -100,14 +124,31 @@
 <body>
 
 <div id="toolbar">
-    <h1>El Dibujo de Angela</h1>
-    <div class="color-swatch active" style="background: #ff79c6;" data-color="#ff79c6"></div>
-    <div class="color-swatch" style="background: #8be9fd;" data-color="#8be9fd"></div>
-    <div class="color-swatch" style="background: #50fa7b;" data-color="#50fa7b"></div>
-    <div class="color-swatch" style="background: #f1fa8c;" data-color="#f1fa8c"></div>
-    <div class="color-swatch" style="background: #bd93f9;" data-color="#bd93f9"></div>
-    <div class="color-swatch" style="background: #ffffff;" data-color="#ffffff"></div>
-    <button id="clear-btn">Borrar Todo</button>
+    <div class="brand">
+        <h1>El Dibujo de Angela</h1>
+    </div>
+
+    <div class="color-section">
+        <div class="swatches-grid" id="palette">
+            <!-- Colores base (Hue) -->
+            <div class="color-swatch active" style="background: hsl(330, 100%, 50%);" data-h="330"></div>
+            <div class="color-swatch" style="background: hsl(0, 100%, 50%);" data-h="0"></div>
+            <div class="color-swatch" style="background: hsl(30, 100%, 50%);" data-h="30"></div>
+            <div class="color-swatch" style="background: hsl(60, 100%, 50%);" data-h="60"></div>
+            <div class="color-swatch" style="background: hsl(120, 100%, 50%);" data-h="120"></div>
+            <div class="color-swatch" style="background: hsl(180, 100%, 50%);" data-h="180"></div>
+            <div class="color-swatch" style="background: hsl(220, 100%, 50%);" data-h="220"></div>
+            <div class="color-swatch" style="background: hsl(280, 100%, 50%);" data-h="280"></div>
+            <div class="color-swatch" style="background: hsl(0, 0%, 100%);" data-h="0" data-s="0"></div>
+        </div>
+    </div>
+
+    <div class="intensity-section">
+        <label>Luz / Sombra</label>
+        <input type="range" id="lightness" min="10" max="90" value="50">
+    </div>
+
+    <button id="clear-btn">Limpiar</button>
 </div>
 
 <div id="canvas-container">
@@ -119,36 +160,50 @@
 <script>
     const canvas = document.getElementById('paintCanvas');
     const ctx = canvas.getContext('2d');
-    const swatches = document.querySelectorAll('.color-swatch');
+    const palette = document.getElementById('palette');
+    const lightSlider = document.getElementById('lightness');
     const clearBtn = document.getElementById('clear-btn');
 
     let drawing = false;
-    let currentColor = '#ff79c6';
+    let currentHue = 330;
+    let currentSat = 100;
+    let currentLight = 50;
     let points = []; 
 
     function resize() {
         canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight - 70;
+        canvas.height = window.innerHeight - document.getElementById('toolbar').offsetHeight;
         clearCanvas();
     }
 
     function clearCanvas() {
-        ctx.fillStyle = '#121212';
+        ctx.fillStyle = '#0f0f0f';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
 
     window.addEventListener('resize', resize);
-    resize();
+    setTimeout(resize, 100);
 
-    swatches.forEach(swatch => {
-        swatch.addEventListener('click', () => {
-            swatches.forEach(s => s.classList.remove('active'));
-            swatch.classList.add('active');
-            currentColor = swatch.dataset.color;
-        });
+    // Selección de color base
+    palette.addEventListener('click', (e) => {
+        if (e.target.classList.contains('color-swatch')) {
+            document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+            e.target.classList.add('active');
+            
+            currentHue = e.target.dataset.h;
+            // Si es blanco/gris (sat 0)
+            currentSat = e.target.dataset.s !== undefined ? e.target.dataset.s : 100;
+        }
     });
 
-    clearBtn.addEventListener('click', clearCanvas);
+    // Control de oscuridad
+    lightSlider.addEventListener('input', (e) => {
+        currentLight = e.target.value;
+    });
+
+    function getFullColor() {
+        return `hsl(${currentHue}, ${currentSat}%, ${currentLight}%)`;
+    }
 
     function getPos(e) {
         const rect = canvas.getBoundingClientRect();
@@ -165,16 +220,15 @@
 
     function draw(e) {
         if (!drawing) return;
-        
         const pos = getPos(e);
         points.push(pos);
 
         if (points.length < 3) return;
 
-        ctx.lineWidth = 5;
+        ctx.lineWidth = 4;
         ctx.lineJoin = 'round';
         ctx.lineCap = 'round';
-        ctx.strokeStyle = currentColor;
+        ctx.strokeStyle = getFullColor();
 
         const i = points.length - 2;
         const xc = (points[i].x + points[i + 1].x) / 2;
@@ -183,22 +237,22 @@
         const w = canvas.width;
         const h = canvas.height;
 
-        // Las 4 simetrías
-        drawFourWay(points[i-1].x, points[i-1].y, points[i].x, points[i].y, xc, yc, w, h);
+        // Cuadrantes Simétricos
+        drawSymmetry(points[i-1].x, points[i-1].y, points[i].x, points[i].y, xc, yc, w, h);
     }
 
-    function drawFourWay(x0, y0, x1, y1, xc, yc, w, h) {
-        // Cuadrante 1 (Original)
-        renderCurve(x0, y0, x1, y1, xc, yc);
-        // Cuadrante 2 (Espejo Horizontal)
-        renderCurve(w - x0, y0, w - x1, y1, w - xc, yc);
-        // Cuadrante 3 (Espejo Vertical)
-        renderCurve(x0, h - y0, x1, h - y1, xc, h - yc);
-        // Cuadrante 4 (Espejo Total)
-        renderCurve(w - x0, h - y0, w - x1, h - y1, w - xc, h - yc);
+    function drawSymmetry(x0, y0, x1, y1, xc, yc, w, h) {
+        // 1. Original
+        render(x0, y0, x1, y1, xc, yc);
+        // 2. Espejo H
+        render(w - x0, y0, w - x1, y1, w - xc, yc);
+        // 3. Espejo V
+        render(x0, h - y0, x1, h - y1, xc, h - yc);
+        // 4. Espejo Total
+        render(w - x0, h - y0, w - x1, h - y1, w - xc, h - yc);
     }
 
-    function renderCurve(ax, ay, bx, by, cx, cy) {
+    function render(ax, ay, bx, by, cx, cy) {
         ctx.beginPath();
         ctx.moveTo(ax, ay);
         ctx.quadraticCurveTo(bx, by, cx, cy);
@@ -210,10 +264,10 @@
     canvas.addEventListener('mousedown', startDrawing);
     canvas.addEventListener('mousemove', draw);
     window.addEventListener('mouseup', stopDrawing);
-
     canvas.addEventListener('touchstart', (e) => { e.preventDefault(); startDrawing(e); }, {passive: false});
     canvas.addEventListener('touchmove', (e) => { e.preventDefault(); draw(e); }, {passive: false});
     canvas.addEventListener('touchend', stopDrawing);
+    clearBtn.addEventListener('click', clearCanvas);
 
 </script>
 </body>

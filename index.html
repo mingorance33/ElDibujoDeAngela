@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>El Dibujo de Angela</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --panel-color: #1e1e1e;
+            --accent-color: #ff79c6;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: var(--bg-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Barra de Herramientas */
+        #toolbar {
+            height: 70px;
+            background: var(--panel-color);
+            display: flex;
+            align-items: center;
+            padding: 0 25px;
+            gap: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+            z-index: 10;
+            border-bottom: 2px solid var(--accent-color);
+        }
+
+        h1 {
+            color: var(--accent-color);
+            font-size: 1.2rem;
+            margin-right: 20px;
+            white-space: nowrap;
+        }
+
+        .color-swatch {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: all 0.2s ease;
+        }
+
+        .color-swatch.active {
+            border-color: white;
+            transform: scale(1.1);
+            box-shadow: 0 0 10px rgba(255,255,255,0.5);
+        }
+
+        #clear-btn {
+            margin-left: auto;
+            padding: 10px 20px;
+            background: transparent;
+            color: #ff5555;
+            border: 2px solid #ff5555;
+            border-radius: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        #clear-btn:hover {
+            background: #ff5555;
+            color: white;
+        }
+
+        /* Área de lienzo */
+        #canvas-container {
+            flex-grow: 1;
+            position: relative;
+            cursor: crosshair;
+            background: radial-gradient(circle, #1a1a1a 0%, #000000 100%);
+        }
+
+        canvas {
+            display: block;
+        }
+
+        /* Guías de simetría */
+        .guide {
+            position: absolute;
+            background: rgba(255, 121, 198, 0.15);
+            pointer-events: none;
+        }
+        #guide-h { width: 100%; height: 1px; top: 50%; left: 0; }
+        #guide-v { width: 1px; height: 100%; left: 50%; top: 0; }
+    </style>
+</head>
+<body>
+
+<div id="toolbar">
+    <h1>El Dibujo de Angela</h1>
+    <div class="color-swatch active" style="background: #ff79c6;" data-color="#ff79c6"></div>
+    <div class="color-swatch" style="background: #8be9fd;" data-color="#8be9fd"></div>
+    <div class="color-swatch" style="background: #50fa7b;" data-color="#50fa7b"></div>
+    <div class="color-swatch" style="background: #f1fa8c;" data-color="#f1fa8c"></div>
+    <div class="color-swatch" style="background: #bd93f9;" data-color="#bd93f9"></div>
+    <div class="color-swatch" style="background: #ffffff;" data-color="#ffffff"></div>
+    <button id="clear-btn">Borrar Todo</button>
+</div>
+
+<div id="canvas-container">
+    <div id="guide-h" class="guide"></div>
+    <div id="guide-v" class="guide"></div>
+    <canvas id="paintCanvas"></canvas>
+</div>
+
+<script>
+    const canvas = document.getElementById('paintCanvas');
+    const ctx = canvas.getContext('2d');
+    const swatches = document.querySelectorAll('.color-swatch');
+    const clearBtn = document.getElementById('clear-btn');
+
+    let drawing = false;
+    let currentColor = '#ff79c6';
+    let points = []; 
+
+    function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight - 70;
+        clearCanvas();
+    }
+
+    function clearCanvas() {
+        ctx.fillStyle = '#121212';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    window.addEventListener('resize', resize);
+    resize();
+
+    swatches.forEach(swatch => {
+        swatch.addEventListener('click', () => {
+            swatches.forEach(s => s.classList.remove('active'));
+            swatch.classList.add('active');
+            currentColor = swatch.dataset.color;
+        });
+    });
+
+    clearBtn.addEventListener('click', clearCanvas);
+
+    function getPos(e) {
+        const rect = canvas.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        return { x: clientX - rect.left, y: clientY - rect.top };
+    }
+
+    function startDrawing(e) {
+        drawing = true;
+        points = [];
+        points.push(getPos(e));
+    }
+
+    function draw(e) {
+        if (!drawing) return;
+        
+        const pos = getPos(e);
+        points.push(pos);
+
+        if (points.length < 3) return;
+
+        ctx.lineWidth = 5;
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = currentColor;
+
+        const i = points.length - 2;
+        const xc = (points[i].x + points[i + 1].x) / 2;
+        const yc = (points[i].y + points[i + 1].y) / 2;
+
+        const w = canvas.width;
+        const h = canvas.height;
+
+        // Las 4 simetrías
+        drawFourWay(points[i-1].x, points[i-1].y, points[i].x, points[i].y, xc, yc, w, h);
+    }
+
+    function drawFourWay(x0, y0, x1, y1, xc, yc, w, h) {
+        // Cuadrante 1 (Original)
+        renderCurve(x0, y0, x1, y1, xc, yc);
+        // Cuadrante 2 (Espejo Horizontal)
+        renderCurve(w - x0, y0, w - x1, y1, w - xc, yc);
+        // Cuadrante 3 (Espejo Vertical)
+        renderCurve(x0, h - y0, x1, h - y1, xc, h - yc);
+        // Cuadrante 4 (Espejo Total)
+        renderCurve(w - x0, h - y0, w - x1, h - y1, w - xc, h - yc);
+    }
+
+    function renderCurve(ax, ay, bx, by, cx, cy) {
+        ctx.beginPath();
+        ctx.moveTo(ax, ay);
+        ctx.quadraticCurveTo(bx, by, cx, cy);
+        ctx.stroke();
+    }
+
+    function stopDrawing() { drawing = false; }
+
+    canvas.addEventListener('mousedown', startDrawing);
+    canvas.addEventListener('mousemove', draw);
+    window.addEventListener('mouseup', stopDrawing);
+
+    canvas.addEventListener('touchstart', (e) => { e.preventDefault(); startDrawing(e); }, {passive: false});
+    canvas.addEventListener('touchmove', (e) => { e.preventDefault(); draw(e); }, {passive: false});
+    canvas.addEventListener('touchend', stopDrawing);
+
+</script>
+</body>
+</html>
